@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeSpace", "FreeSpace\FreeSpace.csproj", "{86FC4909-860D-4F69-8FFE-A10AFEAA362C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{86FC4909-860D-4F69-8FFE-A10AFEAA362C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86FC4909-860D-4F69-8FFE-A10AFEAA362C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86FC4909-860D-4F69-8FFE-A10AFEAA362C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86FC4909-860D-4F69-8FFE-A10AFEAA362C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {76D7B13D-7CDF-4945-8EA2-BDD06163C308}
+	EndGlobalSection
+EndGlobal
