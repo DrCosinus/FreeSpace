@@ -1,16 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
-using System.IO;
-using System.Security.AccessControl;
-using System.Security.Principal;
-//using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
 
-// Pensez à checker le site : http://blogs.msdn.com/bclteam/archive/2007/02/13/long-paths-in-net-part-1-of-3-kim-hamilton.aspx
+// Pensez à checker le site : https://learn.microsoft.com/en-us/archive/blogs/bclteam/long-paths-in-net-part-1-of-3-kim-hamilton
 
 namespace FreeSpace
 {
@@ -64,7 +58,7 @@ namespace FreeSpace
             {
                 if (_bEnabled)
                     splitter.Panel1Collapsed = false;
-                    //tvDiskDrive.Show();
+                //tvDiskDrive.Show();
                 else
                     splitter.Panel1Collapsed = true;
                 //tvDiskDrive.Hide();
@@ -155,14 +149,12 @@ namespace FreeSpace
             throw new Exception("YOU MUST NOT CALL CONSTRUCTOR");
         }
 
-
         public static void Init(TreeView _tv, RichTextBox _rtbLogger, SplitContainer _splitter)
         {
             splitter = _splitter;
             tvDiskDrive = _tv;
             RTFLogger = _rtbLogger;
         }
-
 
         public static void StartDump(string _strDriveName, DirectoryInfo _di)
         {
@@ -182,7 +174,7 @@ namespace FreeSpace
         public static void AbortDump()
         {
             LogMessage("ABORTING THREAD\n");
-            if ( dumpThread != null )
+            if (dumpThread != null)
                 dumpThread.Abort();
             dumpThread = null;
         }

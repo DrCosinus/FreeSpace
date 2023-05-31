@@ -1,22 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 
 using System.IO;
-//using System.Diagnostics;
 using System.Collections;
-using System.Security.AccessControl;
-using System.Security.Principal;
 
 namespace FreeSpace
 {
     public partial class FreeSpace : Form
     {
-
         public FreeSpace()
         {
             InitializeComponent();
@@ -74,7 +66,7 @@ namespace FreeSpace
                 DirectoryInfo diRoot = Drive.RootDirectory;
                 //DirectoryInfo diRoot = new DirectoryInfo(@"c:\Program Files\");
                 if (!WorkThread.isRunning)
-                    WorkThread.StartDump(Drive.Name, diRoot); 
+                    WorkThread.StartDump(Drive.Name, diRoot);
             }
         }
 
@@ -83,9 +75,6 @@ namespace FreeSpace
 
         private void tvDisk_DrawNode(object sender, DrawTreeNodeEventArgs e)
         {
-            //if (e.State != 0)
-            //    Debug.WriteLine(e.State.ToString()); 
-
             if (!e.Node.IsVisible)
                 return;
 
@@ -168,7 +157,6 @@ namespace FreeSpace
             }
 
             return bounds;
-
         }
 
         private void tvDisk_MouseDown(object sender, MouseEventArgs e)
