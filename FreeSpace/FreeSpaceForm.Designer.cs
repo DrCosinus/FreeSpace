@@ -60,7 +60,7 @@ namespace FreeSpace
             this.btnUpdate.TabIndex = 1;
             this.btnUpdate.Text = "Update";
             this.btnUpdate.UseVisualStyleBackColor = true;
-            this.btnUpdate.Click += new System.EventHandler(this.btnUpdate_Click);
+            this.btnUpdate.Click += new System.EventHandler(this.OnButtonUpdateClick);
             // 
             // tvDisk
             // 
@@ -70,8 +70,8 @@ namespace FreeSpace
             this.tvDisk.Name = "tvDisk";
             this.tvDisk.Size = new System.Drawing.Size(612, 264);
             this.tvDisk.TabIndex = 2;
-            this.tvDisk.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.tvDisk_DrawNode);
-            this.tvDisk.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tvDisk_MouseDown);
+            this.tvDisk.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.OnTreeviewDiskDrawNode);
+            this.tvDisk.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnTreeviewDiskMouseDown);
             // 
             // panel1
             // 
@@ -121,9 +121,9 @@ namespace FreeSpace
             this.Controls.Add(this.panel1);
             this.Name = "FreeSpace";
             this.Padding = new System.Windows.Forms.Padding(5);
-            this.Text = "FreeSpace v2.0 (2009-05-21)";
+            this.Text = "FreeSpace 2023.05.31";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FreeSpace_FormClosing);
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.OnFormLoad);
             this.panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);

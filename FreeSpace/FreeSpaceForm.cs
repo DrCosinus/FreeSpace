@@ -1,9 +1,8 @@
 using System;
-using System.Drawing;
-using System.Windows.Forms;
-
-using System.IO;
 using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
 
 namespace FreeSpace
 {
@@ -15,7 +14,7 @@ namespace FreeSpace
             WorkThread.Init(tvDisk, rtbLogger, splitContainer1);
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void OnFormLoad(object sender, EventArgs e)
         {
             DriveInfo[] DriveList = DriveInfo.GetDrives();
             foreach (DriveInfo Drive in DriveList)
@@ -35,11 +34,12 @@ namespace FreeSpace
                     VolumeLabel = Drive.DriveType.ToString();
                 }
 
-                cbDiskList.Items.Add(String.Format("{1} ({0})", Drive.Name, VolumeLabel));
+                cbDiskList.Items.Add($"{Drive.Name} ({VolumeLabel})");
             }
             cbDiskList.SelectedIndex = 0;
             tvDisk.TreeViewNodeSorter = new NodeSorter();
         }
+
         public class NodeSorter : IComparer
         {
             public int Compare(object x, object y)
@@ -50,14 +50,11 @@ namespace FreeSpace
                     return -1;
                 if (tx.Tag == null)
                     return 1;
-                if (((NodeTag)ty.Tag).Data > ((NodeTag)tx.Tag).Data)
-                    return 1;
-                else
-                    return -1;
+                return (int)(((NodeTag)ty.Tag).Data - ((NodeTag)tx.Tag).Data);
             }
         }
 
-        private void btnUpdate_Click(object sender, EventArgs e)
+        private void OnButtonUpdateClick(object sender, EventArgs e)
         {
             DriveInfo Drive = DriveInfo.GetDrives()[cbDiskList.SelectedIndex];
 
@@ -71,9 +68,9 @@ namespace FreeSpace
         }
 
         // Create a Font object for the node tags.
-        Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
+        readonly Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
 
-        private void tvDisk_DrawNode(object sender, DrawTreeNodeEventArgs e)
+        private void OnTreeviewDiskDrawNode(object sender, DrawTreeNodeEventArgs e)
         {
             if (!e.Node.IsVisible)
                 return;
@@ -136,6 +133,7 @@ namespace FreeSpace
                 }
             }
         }
+
         // Returns the bounds of the specified node, including the region 
         // occupied by the node label and any node tag displayed.
         private Rectangle NodeBounds(TreeNode node)
@@ -159,7 +157,7 @@ namespace FreeSpace
             return bounds;
         }
 
-        private void tvDisk_MouseDown(object sender, MouseEventArgs e)
+        private void OnTreeviewDiskMouseDown(object sender, MouseEventArgs e)
         {
             TreeNode clickedNode = tvDisk.GetNodeAt(e.X, e.Y);
             if (clickedNode != null && NodeBounds(clickedNode).Contains(e.X, e.Y))

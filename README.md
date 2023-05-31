@@ -3,7 +3,7 @@ FREESPACE
 
 Simple tool to show disk contents
 
-Improvements
+Improvements to be done
 -
 
 - [ ] partial analysis: only analyse a folder
@@ -12,5 +12,6 @@ Improvements
 - [ ] see in explorer
 - [ ] speed up the process
 - [ ] dynamic updates
+- [ ] progress bar
 
 

@@ -2,13 +2,15 @@ using System;
 
 namespace FreeSpace
 {
-    public class NodeTag : Object
+    public class NodeTag
     {
         public long Data;
+
         public NodeTag(long x)
         {
             Data = x;
         }
+
         public override string ToString()
         {
             long DirSize = Data;
