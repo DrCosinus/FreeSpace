@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Drawing;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 // Pensez à checker le site : https://learn.microsoft.com/en-us/archive/blogs/bclteam/long-paths-in-net-part-1-of-3-kim-hamilton
@@ -57,11 +59,15 @@ namespace FreeSpace
             else
             {
                 if (_bEnabled)
+                {
                     splitter.Panel1Collapsed = false;
-                //tvDiskDrive.Show();
+                    tvDiskDrive.Show();
+                }
                 else
+                {
                     splitter.Panel1Collapsed = true;
-                //tvDiskDrive.Hide();
+                    tvDiskDrive.Hide();
+                }
             }
         }
 
@@ -91,10 +97,9 @@ namespace FreeSpace
                 RTFLogger.Invoke((Void_String_Callback)LogAppendText, _str);
             else
             {
-                RTFLogger.AppendText(_str);
+                RTFLogger.AppendText($"[{DateTime.Now}] {_str}");
                 RTFLogger.ScrollToCaret();
             }
-
         }
 
         static void LogClear()
@@ -106,42 +111,37 @@ namespace FreeSpace
                 RTFLogger.Clear();
                 RTFLogger.ScrollToCaret();
             }
-
         }
 
-        static Font MessageFont = new Font("Helvetica", 8.25f, FontStyle.Italic);
-        static void LogMessage(string Format, params object[] args)
+        static readonly Font MessageFont = new Font("Helvetica", 8.25f, FontStyle.Italic);
+        static void LogMessage(string message)
         {
-            String log = String.Format(Format, args);
             lock (RTFLogger)
             {
                 SetLogStyle(MessageFont, Color.Black);
-                LogAppendText(log);
+                LogAppendText(message);
             }
         }
 
-        static Font WarningFont = new Font("Helvetica", 8.25f, FontStyle.Regular);
-        static void LogWarning(string Format, params object[] args)
+        static readonly Font WarningFont = new Font("Helvetica", 8.25f, FontStyle.Regular);
+        static void LogWarning(string warning)
         {
-            String log = String.Format(Format, args);
             lock (RTFLogger)
             {
                 SetLogStyle(WarningFont, Color.DarkBlue);
-                LogAppendText(log);
+                LogAppendText(warning);
             }
         }
 
-        static Font ErrorFont = new Font("Helvetica", 8.25f, FontStyle.Bold);
-        static void LogError(string Format, params object[] args)
+        static readonly Font ErrorFont = new Font("Helvetica", 8.25f, FontStyle.Bold);
+        static void LogError(string error)
         {
-            String log = String.Format(Format, args);
             lock (RTFLogger)
             {
                 SetLogStyle(ErrorFont, Color.DarkOrange);
-                LogAppendText(log);
+                LogAppendText(error);
             }
         }
-
         #endregion
 
         public WorkThread()
@@ -185,6 +185,7 @@ namespace FreeSpace
             LogMessage("START THREAD\n");
             ShowDiskTree(false);
             DumpDirectory(treeRootNode, directoryInfo);
+            LogMessage("DUMP COMPLETED\n");
             bigestSize = ((NodeTag)treeRootNode.Tag).Data;
             bRunning = false;
             SortDiskTree();
@@ -197,65 +198,69 @@ namespace FreeSpace
         private static long DumpDirectory(TreeNode _tnLocalRoot, DirectoryInfo _di)
         {
             long DirSize = 0;
-
+            object mutex = new object();
             try
             {
-                DirectoryInfo[] DirList = _di.GetDirectories();
+                var DirList = _di.EnumerateDirectories();
 
-                foreach (DirectoryInfo di in DirList)
+                Parallel.ForEach(DirList, di =>
                 {
                     if (di.Name != " ")
                     {
-                        DirSize += DumpDirectory(DiskAddNode(_tnLocalRoot, di.Name), di);
+                        lock(mutex)
+                            DirSize += DumpDirectory(DiskAddNode(_tnLocalRoot, di.Name), di);
                     }
-                }
+                });
 
-                FileInfo[] FileList = _di.GetFiles();
-                if (FileList.Length > 0)
+                var FileList = _di.EnumerateFiles();
+                long TotalFilesSize = 0;
+                bool isEmpty = true;
+                Parallel.ForEach(FileList, fi =>
                 {
-                    long TotalFilesSize = 0;
-                    foreach (FileInfo fi in FileList)
+                    isEmpty = false;
+                    try
                     {
-                        try
-                        {
+                        lock (mutex)
                             TotalFilesSize += fi.Length;
-                        }
-                        catch (System.IO.FileNotFoundException)
-                        {
-                            LogError("File Not Found: {0}\n", fi.FullName);
-                        }
-                        catch (System.Threading.ThreadAbortException e)
-                        {
-                            throw e;
-                        }
-                        catch (Exception e)
-                        {
-                            LogError("Unknown Exception: {0}\n{1}\n", fi.FullName, e.ToString());
-                        }
                     }
+                    catch (FileNotFoundException)
+                    {
+                        LogError($"File Not Found: {fi.FullName}\n");
+                    }
+                    catch (ThreadAbortException e)
+                    {
+                        throw e;
+                    }
+                    catch (Exception e)
+                    {
+                        LogError($"Unknown Exception: {fi.FullName}\n{e}\n");
+                    }
+                });
 
+                if (!isEmpty)
+                {
                     DiskAddNode(_tnLocalRoot, "/*** Files ***/").Tag = new NodeTag(TotalFilesSize);
                     DirSize += TotalFilesSize;
                 }
             }
-            catch (System.IO.DirectoryNotFoundException)
+            catch (DirectoryNotFoundException)
             {
-                LogWarning("Can't find directory: {0}\n", _di.FullName);
+                LogWarning($"Can't find directory: {_di.FullName}\n");
             }
-            catch (System.IO.PathTooLongException)
+            catch (PathTooLongException)
             {
-                LogWarning("Path Too Long: {0}\n", _di.FullName);
+                LogWarning($"Path Too Long: {_di.FullName}\n");
             }
-            catch (System.UnauthorizedAccessException)
+            catch (UnauthorizedAccessException)
             {
-                //LogWarning("Unauthorized Access: {0}\n", _di.FullName);
+                //LogWarning($"Unauthorized Access: {_di.FullName}\n");
             }
-            catch (System.Threading.ThreadAbortException)
+            catch (ThreadAbortException)
             {
             }
             catch (Exception e)
             {
-                LogWarning("Unknown Exception: {0}\n{1}\n", _di.FullName, e.ToString());
+                LogWarning($"Unknown Exception: {_di.FullName}\n{e}\n");
             }
             finally
             {

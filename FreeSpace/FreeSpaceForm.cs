@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -8,6 +7,9 @@ namespace FreeSpace
 {
     public partial class FreeSpace : Form
     {
+        // Create a Font object for the node tags.
+        private readonly Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
+
         public FreeSpace()
         {
             InitializeComponent();
@@ -40,20 +42,6 @@ namespace FreeSpace
             tvDisk.TreeViewNodeSorter = new NodeSorter();
         }
 
-        public class NodeSorter : IComparer
-        {
-            public int Compare(object x, object y)
-            {
-                TreeNode tx = x as TreeNode;
-                TreeNode ty = y as TreeNode;
-                if (ty.Tag == null)
-                    return -1;
-                if (tx.Tag == null)
-                    return 1;
-                return (int)(((NodeTag)ty.Tag).Data - ((NodeTag)tx.Tag).Data);
-            }
-        }
-
         private void OnButtonUpdateClick(object sender, EventArgs e)
         {
             DriveInfo Drive = DriveInfo.GetDrives()[cbDiskList.SelectedIndex];
@@ -66,9 +54,6 @@ namespace FreeSpace
                     WorkThread.StartDump(Drive.Name, diRoot);
             }
         }
-
-        // Create a Font object for the node tags.
-        readonly Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
 
         private void OnTreeviewDiskDrawNode(object sender, DrawTreeNodeEventArgs e)
         {
