@@ -18,4 +18,6 @@ Improvements to be done
 - [ ] logical drives
 - [ ] "Files as a folder"
 
-I can retrieve all files in one pass with SearchOption.AllDirectories
+> Bad ideas :
+> - ~~I can retrieve all files in one pass with SearchOption.AllDirectories~~  
+it will try to retrieve unauthorized folders when use from root of drives and raise exception

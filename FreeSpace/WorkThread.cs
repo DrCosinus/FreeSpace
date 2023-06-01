@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -70,12 +72,73 @@ namespace FreeSpace
             }
         }
 
-        static TreeNode DiskAddNode(TreeNode _tn, string _str)
+        private static void FillTree_R(TreeNode treeLocalRootNode, FolderTree root)
+        {
+            treeLocalRootNode.Tag = new NodeTag(root.size);
+
+            foreach (var child in root.children)
+            {
+                // for now due to an issue (with the sort ??) we must check for null child
+                if (child == null)
+                    continue;
+                var child_node = treeLocalRootNode.Nodes.Add(child.text);
+                FillTree_R(child_node, child);
+            }
+            //if (tvDiskDrive.InvokeRequired)
+            //{
+            //    tvDiskDrive.Invoke((Action<TreeNode, FolderTree>)FillTree, treeRootNode, root);
+            //    return;
+            //}
+            //throw new NotImplementedException();
+        }
+
+        private static void FillTree(TreeNode treeRootNode, FolderTree root)
         {
             if (tvDiskDrive.InvokeRequired)
-                return (TreeNode)tvDiskDrive.Invoke((TreeNode_TreeNode_String_Callback)DiskAddNode, _tn, _str);
-            return _tn.Nodes.Add(_str);
+            {
+                tvDiskDrive.Invoke((Action<TreeNode, FolderTree>)FillTree_R, treeRootNode, root);
+                return;
+            }
+            FillTree_R(treeRootNode, root);
         }
+
+        private static FolderTreeSizeSorter folderTreeSizeSorter = new FolderTreeSizeSorter();
+        private static void SortFolderTree(FolderTree root)
+        {
+            root.children.Sort(folderTreeSizeSorter);
+            foreach (var child in root.children)
+            {
+                if (child == null) continue;
+                SortFolderTree(child);
+            }
+        }
+
+        internal class FolderTree
+        {
+            public readonly string text;
+            internal long size = 0;
+            internal List<FolderTree> children = new List<FolderTree>();
+
+            public FolderTree(string text)
+            {
+                this.text = text;
+            }
+
+            internal FolderTree AddChild(string name)
+            {
+                var child = new FolderTree(name);
+                Debug.Assert(child != null);
+                children.Add(child);
+                return child;
+            }
+        }
+
+        //static TreeNode DiskAddNode(TreeNode _tn, string _str)
+        //{
+        //    if (tvDiskDrive.InvokeRequired)
+        //        return (TreeNode)tvDiskDrive.Invoke((TreeNode_TreeNode_String_Callback)DiskAddNode, _tn, _str);
+        //    return _tn.Nodes.Add(_str);
+        //}
         #endregion
 
         #region Logger methods
@@ -178,23 +241,29 @@ namespace FreeSpace
             dumpThread = null;
         }
 
+        static FolderTree root;
         static void WorkingThread()
         {
             LogClear();
             LogMessage("START THREAD\n");
+            root = new FolderTree(directoryInfo.Name);
             ShowDiskTree(false);
-            DumpDirectory(treeRootNode, directoryInfo);
+            DumpDirectory(root, directoryInfo);
             LogMessage("DUMP COMPLETED\n");
+            SortFolderTree(root);
+            LogMessage("SORT COMPLETED\n");
+            FillTree(treeRootNode, root);
+            LogMessage("TREE FILLED\n");
             bigestSize = ((NodeTag)treeRootNode.Tag).Data;
             bRunning = false;
-            SortDiskTree();
+            //SortDiskTree();
             ShowDiskTree(true);
             LogMessage("FINISH THREAD\n");
             dumpThread.Abort();
             dumpThread = null;
         }
 
-        private static long DumpDirectory(TreeNode _tnLocalRoot, DirectoryInfo _di)
+        private static long DumpDirectory(FolderTree _localRoot, DirectoryInfo _di)
         {
             long DirSize = 0;
             object mutex = new object();
@@ -204,7 +273,8 @@ namespace FreeSpace
 
                 Parallel.ForEach(DirList, di =>
                 {
-                    var subDirSize = DumpDirectory(DiskAddNode(_tnLocalRoot, di.Name), di);
+                    FolderTree child = _localRoot.AddChild(di.Name);
+                    var subDirSize = DumpDirectory(child, di);
                     lock (mutex)
                         DirSize += subDirSize;
                 });
@@ -215,35 +285,36 @@ namespace FreeSpace
                 Parallel.ForEach(FileList, fi =>
                 {
                     isEmpty = false;
-                    try
-                    {
-                        lock (mutex)
-                            TotalFilesSize += fi.Length;
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        LogError($"File Not Found: {fi.FullName}\n");
-                    }
-                    catch (ThreadAbortException e)
-                    {
-                        throw e;
-                    }
-                    catch (Exception e)
-                    {
-                        LogError($"Unknown Exception: {fi.FullName}\n{e}\n");
-                    }
+                    //try
+                    //{
+                    lock (mutex)
+                        TotalFilesSize += fi.Length;
+                    //}
+                    //catch (FileNotFoundException)
+                    //{
+                    //    LogError($"File Not Found: {fi.FullName}\n");
+                    //}
+                    //catch (ThreadAbortException e)
+                    //{
+                    //    throw e;
+                    //}
+                    //catch (Exception e)
+                    //{
+                    //    LogError($"Unknown Exception: {fi.FullName}\n{e}\n");
+                    //}
                 });
 
                 if (!isEmpty)
                 {
-                    DiskAddNode(_tnLocalRoot, "/*** Files ***/").Tag = new NodeTag(TotalFilesSize);
+                    _localRoot.AddChild("/*** Files ***/").size = TotalFilesSize;
+                    //DiskAddNode(_tnLocalRoot, "/*** Files ***/").Tag = new NodeTag(TotalFilesSize);
                     DirSize += TotalFilesSize;
                 }
             }
-            catch (DirectoryNotFoundException)
-            {
-                LogWarning($"Can't find directory: {_di.FullName}\n");
-            }
+            //catch (DirectoryNotFoundException)
+            //{
+            //    LogWarning($"Can't find directory: {_di.FullName}\n");
+            //}
             catch (PathTooLongException)
             {
                 LogWarning($"Path Too Long: {_di.FullName}\n");
@@ -261,7 +332,7 @@ namespace FreeSpace
             }
             finally
             {
-                _tnLocalRoot.Tag = new NodeTag(DirSize);
+                _localRoot.size = DirSize;
             }
             return DirSize;
         }

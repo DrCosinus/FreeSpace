@@ -13,6 +13,7 @@ namespace FreeSpace
         public FreeSpace()
         {
             InitializeComponent();
+            tvDisk.TreeViewNodeSorter = new NodeSorter();
             WorkThread.Init(tvDisk, rtbLogger, splitContainer1);
         }
 
