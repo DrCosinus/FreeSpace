@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Drawing;
 using System.IO;
 using System.Threading;
@@ -205,11 +204,9 @@ namespace FreeSpace
 
                 Parallel.ForEach(DirList, di =>
                 {
-                    if (di.Name != " ")
-                    {
-                        lock(mutex)
-                            DirSize += DumpDirectory(DiskAddNode(_tnLocalRoot, di.Name), di);
-                    }
+                    var subDirSize = DumpDirectory(DiskAddNode(_tnLocalRoot, di.Name), di);
+                    lock (mutex)
+                        DirSize += subDirSize;
                 });
 
                 var FileList = _di.EnumerateFiles();
