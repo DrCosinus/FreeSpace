@@ -12,10 +12,20 @@ on:
 jobs:
   build:
 
-    runs-on: windows
+    runs-on: [windows-latest]
 
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3.1
+      
+    - name: Setup NuGet.exe for use with actions
+      uses: NuGet/setup-nuget@v1.2.0
+      
+    - name: restore-nuget-packages
+      uses: IT-Service/restore-nuget-packages@v1.0.2  
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
