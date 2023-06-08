@@ -24,17 +24,8 @@ jobs:
       uses: NuGet/setup-nuget@v1.2.0
       
     - name: Restore NuGet Packages
-      run: nuget restore FreeSpace.sln # uses: IT-Service/restore-nuget-packages@v1.0.2  
+      run: nuget restore FreeSpace.sln
      
     - name: Build the Solution 
-      run: msbuild FreeSpace.sln
-    #- name: Setup .NET
-    #  uses: actions/setup-dotnet@v3
-    #  with:
-    #    dotnet-version: '4.7.2'
-    #- name: Restore dependencies
-    #  run: dotnet restore
-    #- name: Build
-    #  run: dotnet build --no-restore
-    #- name: Test
-    #  run: dotnet test --no-build --verbosity normal
+      run: msbuild FreeSpace.sln /p:Configuration=Release
+
