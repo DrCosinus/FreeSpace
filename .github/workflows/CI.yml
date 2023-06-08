@@ -31,6 +31,9 @@ jobs:
      
     - name: Build the Solution 
       run: msbuild FreeSpace.sln /p:Configuration=Release
+    
+    - name: Upload pages artifact
+      uses: actions/upload-pages-artifact@v1.0.8
 
   deploy:
     # Add a dependency to the build job
