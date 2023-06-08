@@ -1,5 +1,6 @@
 FREESPACE
 =
+[![.NET](https://github.com/DrCosinus/FreeSpace/actions/workflows/CI.yml/badge.svg)](https://github.com/DrCosinus/FreeSpace/actions/workflows/CI.yml)
 
 Simple tool to show disk contents
 
