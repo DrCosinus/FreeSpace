@@ -78,7 +78,6 @@
     <Compile Include="FreeSpaceForm.Designer.cs">
       <DependentUpon>FreeSpaceForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="NodeSorter.cs" />
     <Compile Include="NodeTag.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

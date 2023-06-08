@@ -13,7 +13,6 @@ namespace FreeSpace
         public FreeSpace()
         {
             InitializeComponent();
-            tvDisk.TreeViewNodeSorter = new NodeSorter();
             WorkThread.Init(tvDisk, rtbLogger, splitContainer1);
         }
 
@@ -40,7 +39,6 @@ namespace FreeSpace
                 cbDiskList.Items.Add($"{Drive.Name} ({VolumeLabel})");
             }
             cbDiskList.SelectedIndex = 0;
-            tvDisk.TreeViewNodeSorter = new NodeSorter();
         }
 
         private void OnButtonUpdateClick(object sender, EventArgs e)

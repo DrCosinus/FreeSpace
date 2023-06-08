@@ -43,14 +43,6 @@ namespace FreeSpace
             }
         }
 
-        static void SortDiskTree()
-        {
-            if (tvDiskDrive.InvokeRequired)
-                tvDiskDrive.Invoke((Void_Void_Callback)SortDiskTree);
-            else
-                tvDiskDrive.Sort();
-        }
-
         static void ShowDiskTree(bool _bEnabled)
         {
             if (splitter.InvokeRequired)
@@ -78,18 +70,9 @@ namespace FreeSpace
 
             foreach (var child in root.children)
             {
-                // for now due to an issue (with the sort ??) we must check for null child
-                if (child == null)
-                    continue;
                 var child_node = treeLocalRootNode.Nodes.Add(child.text);
                 FillTree_R(child_node, child);
             }
-            //if (tvDiskDrive.InvokeRequired)
-            //{
-            //    tvDiskDrive.Invoke((Action<TreeNode, FolderTree>)FillTree, treeRootNode, root);
-            //    return;
-            //}
-            //throw new NotImplementedException();
         }
 
         private static void FillTree(TreeNode treeRootNode, FolderTree root)
@@ -102,18 +85,17 @@ namespace FreeSpace
             FillTree_R(treeRootNode, root);
         }
 
-        private static FolderTreeSizeSorter folderTreeSizeSorter = new FolderTreeSizeSorter();
         private static void SortFolderTree(FolderTree root)
         {
-            root.children.Sort(folderTreeSizeSorter);
-            foreach (var child in root.children)
+            Parallel.ForEach(root.children, child =>
             {
-                if (child == null) continue;
                 SortFolderTree(child);
-            }
+            });
+
+            root.children.Sort();
         }
 
-        internal class FolderTree
+        internal class FolderTree : IEquatable<FolderTree>, IComparable<FolderTree>
         {
             public readonly string text;
             internal long size = 0;
@@ -124,6 +106,20 @@ namespace FreeSpace
                 this.text = text;
             }
 
+            public int CompareTo(FolderTree other)
+            {
+                if (other == null) return -1;
+                int result = -size.CompareTo(other.size);
+                if (result == 0) result = text.CompareTo(other.text);
+                return result;
+            }
+
+            public bool Equals(FolderTree other)
+            {
+                if (other == null) return false;
+                return ReferenceEquals(other, this);
+            }
+
             internal FolderTree AddChild(string name)
             {
                 var child = new FolderTree(name);
@@ -132,13 +128,6 @@ namespace FreeSpace
                 return child;
             }
         }
-
-        //static TreeNode DiskAddNode(TreeNode _tn, string _str)
-        //{
-        //    if (tvDiskDrive.InvokeRequired)
-        //        return (TreeNode)tvDiskDrive.Invoke((TreeNode_TreeNode_String_Callback)DiskAddNode, _tn, _str);
-        //    return _tn.Nodes.Add(_str);
-        //}
         #endregion
 
         #region Logger methods
@@ -256,7 +245,6 @@ namespace FreeSpace
             LogMessage("TREE FILLED\n");
             bigestSize = ((NodeTag)treeRootNode.Tag).Data;
             bRunning = false;
-            //SortDiskTree();
             ShowDiskTree(true);
             LogMessage("FINISH THREAD\n");
             dumpThread.Abort();
@@ -273,7 +261,9 @@ namespace FreeSpace
 
                 Parallel.ForEach(DirList, di =>
                 {
-                    FolderTree child = _localRoot.AddChild(di.Name);
+                    FolderTree child;
+                    lock (_localRoot)
+                        child = _localRoot.AddChild(di.Name);
                     var subDirSize = DumpDirectory(child, di);
                     lock (mutex)
                         DirSize += subDirSize;
@@ -285,36 +275,17 @@ namespace FreeSpace
                 Parallel.ForEach(FileList, fi =>
                 {
                     isEmpty = false;
-                    //try
-                    //{
+
                     lock (mutex)
                         TotalFilesSize += fi.Length;
-                    //}
-                    //catch (FileNotFoundException)
-                    //{
-                    //    LogError($"File Not Found: {fi.FullName}\n");
-                    //}
-                    //catch (ThreadAbortException e)
-                    //{
-                    //    throw e;
-                    //}
-                    //catch (Exception e)
-                    //{
-                    //    LogError($"Unknown Exception: {fi.FullName}\n{e}\n");
-                    //}
                 });
 
                 if (!isEmpty)
                 {
                     _localRoot.AddChild("/*** Files ***/").size = TotalFilesSize;
-                    //DiskAddNode(_tnLocalRoot, "/*** Files ***/").Tag = new NodeTag(TotalFilesSize);
                     DirSize += TotalFilesSize;
                 }
             }
-            //catch (DirectoryNotFoundException)
-            //{
-            //    LogWarning($"Can't find directory: {_di.FullName}\n");
-            //}
             catch (PathTooLongException)
             {
                 LogWarning($"Path Too Long: {_di.FullName}\n");
