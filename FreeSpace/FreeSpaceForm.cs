@@ -10,6 +10,12 @@ namespace FreeSpace
         // Create a Font object for the node tags.
         private readonly Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
 
+        private class BackgroundWorkerParameters
+        {
+            public string driveName;
+            public DirectoryInfo localRoot;
+        }
+
         public FreeSpace()
         {
             InitializeComponent();
@@ -50,7 +56,8 @@ namespace FreeSpace
                 DirectoryInfo diRoot = Drive.RootDirectory;
                 //DirectoryInfo diRoot = new DirectoryInfo(@"c:\Program Files\");
                 if (!WorkThread.isRunning)
-                    WorkThread.StartDump(Drive.Name, diRoot);
+                    backgroundWorker.RunWorkerAsync(new BackgroundWorkerParameters { driveName = Drive.Name, localRoot = diRoot } );
+                    //WorkThread.StartDump(Drive.Name, diRoot);
             }
         }
 
@@ -150,9 +157,10 @@ namespace FreeSpace
             }
         }
 
-        private void FreeSpace_FormClosing(object sender, FormClosingEventArgs e)
+        private void backgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            WorkThread.AbortDump();
+            var args = e.Argument as BackgroundWorkerParameters;
+            WorkThread.StartDump(args.driveName, args.localRoot);
         }
     }
 }

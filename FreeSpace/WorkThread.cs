@@ -13,8 +13,14 @@ namespace FreeSpace
 {
     class WorkThread
     {
+        static readonly Font MessageFont = new Font("Helvetica", 8.25f, FontStyle.Italic);
+        static readonly Color MessageColor = Color.Black;
+        static readonly Font WarningFont = new Font("Helvetica", 8.25f, FontStyle.Regular);
+        static readonly Color WarningColor = Color.DarkBlue;
+        static readonly Font ErrorFont = new Font("Helvetica", 8.25f, FontStyle.Bold);
+        static readonly Color ErrorColor = Color.DarkOrange;
+
         static bool bRunning = false;
-        static Thread dumpThread;
         static TreeNode treeRootNode;
         static TreeView tvDiskDrive;
         static DirectoryInfo directoryInfo;
@@ -25,45 +31,7 @@ namespace FreeSpace
         public static bool isRunning { get { return bRunning; } }
         public static long BigestSize { get { return bigestSize; } }
 
-        public delegate void Void_String_Callback(string _str);
-        public delegate void Void_Font_Color_Callback(Font _font, Color _col);
-        public delegate TreeNode TreeNode_TreeNode_String_Callback(TreeNode _tn, string _str);
-        public delegate void Void_Void_Callback();
-        public delegate void Void_Bool_Callback(bool _b);
-
-        #region DiskDrive TreeView methods
-        static void ClearDiskTree(string _strRootName)
-        {
-            if (tvDiskDrive.InvokeRequired)
-                tvDiskDrive.Invoke((Void_String_Callback)ClearDiskTree);
-            else
-            {
-                tvDiskDrive.Nodes.Clear();
-                treeRootNode = tvDiskDrive.Nodes.Add(_strRootName);
-            }
-        }
-
-        static void ShowDiskTree(bool _bEnabled)
-        {
-            if (splitter.InvokeRequired)
-            {
-                splitter.Invoke((Void_Bool_Callback)ShowDiskTree, _bEnabled);
-            }
-            else
-            {
-                if (_bEnabled)
-                {
-                    splitter.Panel1Collapsed = false;
-                    tvDiskDrive.Show();
-                }
-                else
-                {
-                    splitter.Panel1Collapsed = true;
-                    tvDiskDrive.Hide();
-                }
-            }
-        }
-
+        #region Virtual Folder Tree
         private static void FillTree_R(TreeNode treeLocalRootNode, FolderTree root)
         {
             treeLocalRootNode.Tag = new NodeTag(root.size);
@@ -130,68 +98,70 @@ namespace FreeSpace
         }
         #endregion
 
-        #region Logger methods
-        static void SetLogStyle(Font _font, Color _col)
+        #region DiskDrive TreeView invokable methods
+        static void ClearDiskTree(string _strRootName)
         {
-            if (RTFLogger.InvokeRequired)
-                RTFLogger.Invoke((Void_Font_Color_Callback)SetLogStyle, _font, _col);
-            else
+            tvDiskDrive.Invoke(new Action(() =>
             {
-                RTFLogger.SelectionFont = _font;
-                RTFLogger.SelectionColor = _col;
-            }
+                tvDiskDrive.Nodes.Clear();
+                treeRootNode = tvDiskDrive.Nodes.Add(_strRootName);
+            }));
         }
 
-        static void LogAppendText(string _str)
+        static void ShowDiskTree(bool _bEnabled)
         {
-            if (RTFLogger.InvokeRequired)
-                RTFLogger.Invoke((Void_String_Callback)LogAppendText, _str);
-            else
+            splitter.Invoke(new Action(() =>
             {
-                RTFLogger.AppendText($"[{DateTime.Now}] {_str}");
-                RTFLogger.ScrollToCaret();
-            }
+                if (_bEnabled)
+                {
+                    splitter.Panel1Collapsed = false;
+                    tvDiskDrive.Show();
+                }
+                else
+                {
+                    splitter.Panel1Collapsed = true;
+                    tvDiskDrive.Hide();
+                }
+            }));
+        }
+        #endregion
+
+        #region Logger invokable methods
+        static void LogAppendText(string _str, Font _font, Color _col)
+        {
+            lock (RTFLogger)
+                RTFLogger.Invoke(new Action(() =>
+                {
+                    RTFLogger.SelectionFont = _font;
+                    RTFLogger.SelectionColor = _col;
+                    RTFLogger.AppendText($"[{DateTime.Now}] {_str}");
+                    RTFLogger.ScrollToCaret();
+                }));
         }
 
         static void LogClear()
         {
-            if (RTFLogger.InvokeRequired)
-                RTFLogger.Invoke((Void_Void_Callback)LogClear);
-            else
-            {
-                RTFLogger.Clear();
-                RTFLogger.ScrollToCaret();
-            }
+            lock (RTFLogger)
+                RTFLogger.Invoke(new Action(() =>
+                {
+                    RTFLogger.Clear();
+                    RTFLogger.ScrollToCaret();
+                }));
         }
 
-        static readonly Font MessageFont = new Font("Helvetica", 8.25f, FontStyle.Italic);
         static void LogMessage(string message)
         {
-            lock (RTFLogger)
-            {
-                SetLogStyle(MessageFont, Color.Black);
-                LogAppendText(message);
-            }
+            LogAppendText(message, MessageFont, MessageColor);
         }
 
-        static readonly Font WarningFont = new Font("Helvetica", 8.25f, FontStyle.Regular);
         static void LogWarning(string warning)
         {
-            lock (RTFLogger)
-            {
-                SetLogStyle(WarningFont, Color.DarkBlue);
-                LogAppendText(warning);
-            }
+            LogAppendText(warning, WarningFont, WarningColor);
         }
 
-        static readonly Font ErrorFont = new Font("Helvetica", 8.25f, FontStyle.Bold);
         static void LogError(string error)
         {
-            lock (RTFLogger)
-            {
-                SetLogStyle(ErrorFont, Color.DarkOrange);
-                LogAppendText(error);
-            }
+            LogAppendText(error, ErrorFont, ErrorColor);
         }
         #endregion
 
@@ -217,38 +187,26 @@ namespace FreeSpace
             directoryInfo = _di;
             ClearDiskTree(_strDriveName);
 
-            dumpThread = new Thread(WorkThread.WorkingThread);
-            dumpThread.Name = "Dump Thread";
-            dumpThread.Start();
-        }
-
-        public static void AbortDump()
-        {
-            LogMessage("ABORTING THREAD\n");
-            if (dumpThread != null)
-                dumpThread.Abort();
-            dumpThread = null;
+            WorkingThread();
         }
 
         static FolderTree root;
         static void WorkingThread()
         {
-            LogClear();
-            LogMessage("START THREAD\n");
+            LogClear();                                     // UI Thread - Log: can be done in a task setup phase
+            LogMessage("START THREAD\n");                   // UI Thread - Log
             root = new FolderTree(directoryInfo.Name);
-            ShowDiskTree(false);
+            ShowDiskTree(false);                            // UI Thread - Splitter: can be done in a task setup phase
             DumpDirectory(root, directoryInfo);
-            LogMessage("DUMP COMPLETED\n");
+            LogMessage("DUMP COMPLETED\n");                 // UI Thread - Log
             SortFolderTree(root);
-            LogMessage("SORT COMPLETED\n");
-            FillTree(treeRootNode, root);
-            LogMessage("TREE FILLED\n");
-            bigestSize = ((NodeTag)treeRootNode.Tag).Data;
+            LogMessage("SORT COMPLETED\n");                 // UI Thread - Log
+            FillTree(treeRootNode, root);                   // UI Thread
+            LogMessage("TREE FILLED\n");                    // UI Thread - Log
+            bigestSize = ((NodeTag)treeRootNode.Tag).Data;  // UI Thread - But size is a root.size too
             bRunning = false;
-            ShowDiskTree(true);
-            LogMessage("FINISH THREAD\n");
-            dumpThread.Abort();
-            dumpThread = null;
+            ShowDiskTree(true);                             // UI Thread - Splitter: can be done in a task teardown phase
+            LogMessage("FINISH THREAD\n");                  // UI Thread - Log
         }
 
         private static long DumpDirectory(FolderTree _localRoot, DirectoryInfo _di)
