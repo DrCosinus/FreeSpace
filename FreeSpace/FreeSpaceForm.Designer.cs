@@ -146,7 +146,7 @@ namespace FreeSpace
             this.Controls.Add(this.statusStrip1);
             this.Name = "FreeSpace";
             this.Padding = new System.Windows.Forms.Padding(5);
-            this.Text = "FreeSpace 2023.05.31";
+            this.Text = "FreeSpace 2023.06.09";
             this.Load += new System.EventHandler(this.OnFormLoad);
             this.panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);

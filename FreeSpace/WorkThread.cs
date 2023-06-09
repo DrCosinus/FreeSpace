@@ -243,6 +243,8 @@ namespace FreeSpace
                     _localRoot.AddChild("/*** Files ***/").size = TotalFilesSize;
                     DirSize += TotalFilesSize;
                 }
+                if ((_di.Attributes & FileAttributes.ReparsePoint) != 0)
+                    LogMessage($"{_di.FullName} [{_di.Attributes}]\n");
             }
             catch (PathTooLongException)
             {
@@ -250,7 +252,10 @@ namespace FreeSpace
             }
             catch (UnauthorizedAccessException)
             {
-                //LogWarning($"Unauthorized Access: {_di.FullName}\n");
+                if ((_di.Attributes & FileAttributes.ReparsePoint) != 0)
+                    LogError($"Unauthorized Access: {_di.FullName} [{_di.Attributes}]\n");
+                else
+                    LogWarning($"Unauthorized Access: {_di.FullName} [{_di.Attributes}]\n");
             }
             catch (ThreadAbortException)
             {

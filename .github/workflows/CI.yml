@@ -35,7 +35,7 @@ jobs:
     - name: Upload a build artifact
       uses: actions/upload-artifact@v3.1.2
       with:
-        name: FreeSpace.zip
+        name: FreeSpace.exe
         path: FreeSpace\bin\Release\FreeSpace.exe
         
 
