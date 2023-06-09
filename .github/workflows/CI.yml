@@ -1,13 +1,14 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET
+name: CI
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:  
 
 jobs:
   build:
@@ -19,6 +20,8 @@ jobs:
     
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.3.1
+      with:
+        msbuild-architecture: x64
       
     - name: Setup NuGet.exe for use with actions
       uses: NuGet/setup-nuget@v1.2.0
@@ -28,4 +31,11 @@ jobs:
      
     - name: Build the Solution 
       run: msbuild FreeSpace.sln /p:Configuration=Release
+    
+    - name: Upload a build artifact
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: FreeSpace.zip
+        path: FreeSpace\bin\Release\FreeSpace.exe
+        
 
