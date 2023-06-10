@@ -33,7 +33,7 @@ namespace FreeSpace
             this.tvDisk = new System.Windows.Forms.TreeView();
             this.panel1 = new System.Windows.Forms.Panel();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.rtbLogger = new System.Windows.Forms.RichTextBox();
+            this.LoggerBox = new System.Windows.Forms.RichTextBox();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
@@ -101,21 +101,21 @@ namespace FreeSpace
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.rtbLogger);
+            this.splitContainer1.Panel2.Controls.Add(this.LoggerBox);
             this.splitContainer1.Size = new System.Drawing.Size(631, 376);
             this.splitContainer1.SplitterDistance = 240;
             this.splitContainer1.TabIndex = 4;
             // 
-            // rtbLogger
+            // LoggerBox
             // 
-            this.rtbLogger.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtbLogger.Location = new System.Drawing.Point(0, 0);
-            this.rtbLogger.Name = "rtbLogger";
-            this.rtbLogger.ReadOnly = true;
-            this.rtbLogger.Size = new System.Drawing.Size(631, 132);
-            this.rtbLogger.TabIndex = 0;
-            this.rtbLogger.Text = "";
-            this.rtbLogger.WordWrap = false;
+            this.LoggerBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LoggerBox.Location = new System.Drawing.Point(0, 0);
+            this.LoggerBox.Name = "LoggerBox";
+            this.LoggerBox.ReadOnly = true;
+            this.LoggerBox.Size = new System.Drawing.Size(631, 132);
+            this.LoggerBox.TabIndex = 0;
+            this.LoggerBox.Text = "";
+            this.LoggerBox.WordWrap = false;
             // 
             // statusStrip1
             // 
@@ -135,6 +135,7 @@ namespace FreeSpace
             // backgroundWorker
             // 
             this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
             // 
             // FreeSpace
             // 
@@ -167,7 +168,7 @@ namespace FreeSpace
         private System.Windows.Forms.TreeView tvDisk;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.RichTextBox rtbLogger;
+        private System.Windows.Forms.RichTextBox LoggerBox;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
         private System.ComponentModel.BackgroundWorker backgroundWorker;

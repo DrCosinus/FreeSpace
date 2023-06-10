@@ -3,12 +3,15 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
+// Pensez à checker le site : https://learn.microsoft.com/en-us/archive/blogs/bclteam/long-paths-in-net-part-1-of-3-kim-hamilton
+
 namespace FreeSpace
 {
     public partial class FreeSpace : Form
     {
         // Create a Font object for the node tags.
         private readonly Font tagFont = new Font("Helvetica", 9, FontStyle.Bold | FontStyle.Italic);
+        private long BigestSize = 1;
 
         private class BackgroundWorkerParameters
         {
@@ -19,8 +22,82 @@ namespace FreeSpace
         public FreeSpace()
         {
             InitializeComponent();
-            WorkThread.Init(tvDisk, rtbLogger, splitContainer1);
+            Text = $"FreeSpace { System.Reflection.Assembly.GetExecutingAssembly().GetName().Version }";
         }
+
+        #region Logger invokable methods
+        static readonly Font MessageFont = new Font("Helvetica", 8.25f, FontStyle.Italic);
+        static readonly Color MessageColor = Color.Black;
+        static readonly Font WarningFont = new Font("Helvetica", 8.25f, FontStyle.Regular);
+        static readonly Color WarningColor = Color.DarkBlue;
+        static readonly Font ErrorFont = new Font("Helvetica", 8.25f, FontStyle.Bold);
+        static readonly Color ErrorColor = Color.DarkOrange;
+
+        void LogAppendText(string _str, Font _font, Color _col)
+        {
+            lock (LoggerBox)
+                LoggerBox.Invoke(new Action(() =>
+                {
+                    LoggerBox.SelectionFont = _font;
+                    LoggerBox.SelectionColor = _col;
+                    LoggerBox.AppendText($"[{DateTime.Now}] {_str}");
+                    LoggerBox.ScrollToCaret();
+                }));
+        }
+
+        void LogClear()
+        {
+            lock (LoggerBox)
+                LoggerBox.Invoke(new Action(() =>
+                {
+                    LoggerBox.Clear();
+                    LoggerBox.ScrollToCaret();
+                }));
+        }
+
+        void LogMessage(string message)
+        {
+            LogAppendText(message, MessageFont, MessageColor);
+        }
+
+        internal void LogWarning(string warning)
+        {
+            LogAppendText(warning, WarningFont, WarningColor);
+        }
+
+        void LogError(string error)
+        {
+            LogAppendText(error, ErrorFont, ErrorColor);
+        }
+        #endregion
+
+        #region DiskDrive TreeView invokable methods
+        internal TreeNode ClearDiskTreeAndAddRootNode(string _strRootName)
+        {
+            return (TreeNode)tvDisk.Invoke(new Func<TreeNode>(() =>
+            {
+                tvDisk.Nodes.Clear();
+                return tvDisk.Nodes.Add(_strRootName);
+            }));
+        }
+
+        internal void ShowDiskTree(bool _bEnabled)
+        {
+            splitContainer1.Invoke(new Action(() =>
+            {
+                if (_bEnabled)
+                {
+                    splitContainer1.Panel1Collapsed = false;
+                    tvDisk.Show();
+                }
+                else
+                {
+                    splitContainer1.Panel1Collapsed = true;
+                    tvDisk.Hide();
+                }
+            }));
+        }
+        #endregion
 
         private void OnFormLoad(object sender, EventArgs e)
         {
@@ -50,14 +127,13 @@ namespace FreeSpace
         private void OnButtonUpdateClick(object sender, EventArgs e)
         {
             DriveInfo Drive = DriveInfo.GetDrives()[cbDiskList.SelectedIndex];
-
+            btnUpdate.Enabled = false;
             if (Drive.IsReady)
             {
                 DirectoryInfo diRoot = Drive.RootDirectory;
                 //DirectoryInfo diRoot = new DirectoryInfo(@"c:\Program Files\");
-                if (!WorkThread.isRunning)
+                if (!backgroundWorker.IsBusy)
                     backgroundWorker.RunWorkerAsync(new BackgroundWorkerParameters { driveName = Drive.Name, localRoot = diRoot } );
-                    //WorkThread.StartDump(Drive.Name, diRoot);
             }
         }
 
@@ -97,7 +173,7 @@ namespace FreeSpace
             {
                 // LOGARITHMIC
                 // int v = (int)( Math.Log((double)((NodeTag)e.Node.Tag).Data) / Math.Log(2.0f) ) * 4;
-                int v = (int)(Math.Log((double)((NodeTag)e.Node.Tag).Data + 1) / Math.Log((double)WorkThread.BigestSize) * 128.0f);
+                int v = (int)(Math.Log((double)((NodeTag)e.Node.Tag).Data + 1) / Math.Log(BigestSize) * 128.0f);
                 // LINEAR
                 //int v = (int)((double)((NodeTag)e.Node.Tag).Data / BigestSize * 255.0f);
                 if ((uint)v > 128)
@@ -160,7 +236,28 @@ namespace FreeSpace
         private void backgroundWorker_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             var args = e.Argument as BackgroundWorkerParameters;
-            WorkThread.StartDump(args.driveName, args.localRoot);
+            var rootDirInfo = args.localRoot;
+
+            FolderTree root;
+            TreeNode treeviewRoot = ClearDiskTreeAndAddRootNode(rootDirInfo.Name);
+            LogClear();
+            LogMessage("START THREAD\n");
+            root = new FolderTree(rootDirInfo.Name);
+            ShowDiskTree(false);
+            root.DumpDirectory(rootDirInfo, this);
+            LogMessage("DUMP COMPLETED\n");
+            root.Sort();
+            LogMessage("SORT COMPLETED\n");
+            root.FillTreeView(treeviewRoot);
+            LogMessage("TREE FILLED\n");
+            BigestSize = root.size;
+            ShowDiskTree(true);
+            LogMessage("FINISH THREAD\n");
+        }
+
+        private void backgroundWorker_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        {
+            btnUpdate.Enabled = true;
         }
     }
 }

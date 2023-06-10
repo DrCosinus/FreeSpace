@@ -1,0 +1,14 @@
+[SearchableFiles.include]
+*
+
+[SearchableFiles.ignore]
+Debug/
+Release/
+*.pdb
+*.exe
+*.dll
+
+[SourceExplorer.ignore]
+.git/
+.vs/
+*.suo
