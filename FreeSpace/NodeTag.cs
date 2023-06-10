@@ -1,29 +1,23 @@
-using System;
-
 namespace FreeSpace
 {
     public class NodeTag
     {
-        public long Data;
+        public readonly long Size;
 
         public NodeTag(long x)
         {
-            Data = x;
+            Size = x;
         }
 
         public override string ToString()
         {
-            long DirSize = Data;
-            string SizeString;
-            if (DirSize > 1073741824)
-                SizeString = String.Format("({0} Go)", DirSize / 1073741824.0f);
-            else if (DirSize > 1048576)
-                SizeString = String.Format("({0} Mo)", DirSize / 1048576.0f);
-            else if (DirSize > 1024)
-                SizeString = String.Format("({0} ko)", DirSize / 1024.0f);
-            else
-                SizeString = String.Format("({0} o)", DirSize);
-            return SizeString;
+            if (Size > 1073741824)
+                return $"({Size / 1073741824.0f} Go)";
+            if (Size > 1048576)
+                return $"({Size / 1048576.0f} Mo)";
+            if (Size > 1024)
+                return $"({Size / 1024.0f} ko)";
+            return $"({Size} o)";
         }
     }
 }

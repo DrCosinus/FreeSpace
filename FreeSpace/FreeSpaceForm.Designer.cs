@@ -71,12 +71,12 @@ namespace FreeSpace
             // 
             this.tvDisk.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tvDisk.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
+            this.tvDisk.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tvDisk.Location = new System.Drawing.Point(0, 0);
             this.tvDisk.Name = "tvDisk";
             this.tvDisk.Size = new System.Drawing.Size(631, 240);
             this.tvDisk.TabIndex = 2;
             this.tvDisk.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.OnTreeviewDiskDrawNode);
-            this.tvDisk.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnTreeviewDiskMouseDown);
             // 
             // panel1
             // 
@@ -134,8 +134,8 @@ namespace FreeSpace
             // 
             // backgroundWorker
             // 
-            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker_DoWork);
-            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker_RunWorkerCompleted);
+            this.backgroundWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.BackgroundWorker_DoWork);
+            this.backgroundWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.BackgroundWorker_RunWorkerCompleted);
             // 
             // FreeSpace
             // 

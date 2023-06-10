@@ -72,13 +72,6 @@ namespace FreeSpace
 
         internal long DumpDirectory(DirectoryInfo _di, FreeSpace form)
         {
-            //if ((_di.Attributes & FileAttributes.ReparsePoint) != 0)
-            //{
-            //    _localRoot.reparse_point = true;
-            //    LogMessage($"{_di.FullName} [{_di.Attributes}]\n");
-            //    return 0;
-            //}
-
             long DirSize = 0;
             object mutex = new object();
             try
@@ -141,7 +134,5 @@ namespace FreeSpace
             }
             return DirSize;
         }
-
-
     }
 }
